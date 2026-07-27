@@ -6,7 +6,7 @@
 /*   By: hlaaz <hlaaz@student.1337.ma>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/25 17:19:17 by hlaaz             #+#    #+#             */
-/*   Updated: 2026/07/26 19:02:22 by hlaaz            ###   ########.fr       */
+/*   Updated: 2026/07/27 12:52:01 by hlaaz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,7 @@ int	parse_arguments(int argc, char **argv, t_config *config)
 				"<refactor> <required_compiles> "
 				"<cooldown> <fifo|edf>"));
 	if (parse_numbers(argv, config))
-        return (1);
+		return (1);
 	if (parse_scheduler(argv[8], config))
 		return (1);
 	if (validate_config(config))
