@@ -6,7 +6,7 @@
 /*   By: hlaaz <hlaaz@student.1337.ma>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/25 17:19:28 by hlaaz             #+#    #+#             */
-/*   Updated: 2026/07/26 19:01:43 by hlaaz            ###   ########.fr       */
+/*   Updated: 2026/07/27 16:29:36 by hlaaz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,10 @@
 # define FIFO	1
 # define EDF	2
 
+typedef struct s_simulation	t_simulation;
+typedef struct s_coder		t_coder;
+typedef struct s_dongle		t_dongle;
+
 typedef struct s_config
 {
 	int		nb_coders;
@@ -36,7 +40,33 @@ typedef struct s_config
 	int		scheduler;
 }	t_config;
 
+struct s_simulation
+{
+	t_config			config;
+	long				start_time;
+	int					running;
+	pthread_mutex_t		log_mutex;
+	t_coder			*coders;
+	t_dongle		*dongles;
+};
+
+typedef struct s_coder
+{
+	int					id;
+	pthread_t			thread;
+	long				last_compile_start;
+	long				compiles_done;
+	t_simulation		*sim;
+}	t_coder;
+
+typedef struct s_dongle
+{
+	pthread_mutex_t		mutex;
+}	t_dongle;
+
 /* parser.c */
 int	parse_arguments(int argc, char **argv, t_config *config);
 
+
+int	init_simulation(t_simulation *sim, t_config *config);
 #endif
