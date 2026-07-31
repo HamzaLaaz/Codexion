@@ -6,7 +6,7 @@
 /*   By: hlaaz <hlaaz@student.1337.ma>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/25 17:19:28 by hlaaz             #+#    #+#             */
-/*   Updated: 2026/07/31 05:22:22 by hlaaz            ###   ########.fr       */
+/*   Updated: 2026/07/31 06:41:18 by hlaaz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -105,7 +105,7 @@ int		error(char *msg);
 /*utils.c*/
 void	msleep(long ms);
 
-/*logger.c*/
-void	log_action(t_coder *coder, char *msg);
+// /*logger.c*/
+// void	log_action(t_coder *coder, char *msg);
 
 #endif
