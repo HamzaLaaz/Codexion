@@ -6,7 +6,7 @@
 /*   By: hlaaz <hlaaz@student.1337.ma>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/25 17:19:28 by hlaaz             #+#    #+#             */
-/*   Updated: 2026/07/30 06:09:02 by hlaaz            ###   ########.fr       */
+/*   Updated: 2026/07/31 05:22:22 by hlaaz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,12 +90,22 @@ typedef struct s_dongle
 /* parser.c */
 int		parse_arguments(int argc, char **argv, t_config *config);
 
-/* threads.c */
+/*init.c*/
 int		init_simulation(t_simulation *sim, t_config *config);
+
+/* threads.c */
+int		create_threads(t_simulation *sim);
+void	join_threads(t_simulation *sim);
 
 /* cleanup.c */
 void	cleanup_simulation(t_simulation *sim, int nb_dongles_init);
 void	destroy_mutex(t_simulation *sim);
 int		error(char *msg);
+
+/*utils.c*/
+void	msleep(long ms);
+
+/*logger.c*/
+void	log_action(t_coder *coder, char *msg);
 
 #endif
