@@ -6,7 +6,7 @@
 /*   By: hlaaz <hlaaz@student.1337.ma>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/27 16:33:22 by hlaaz             #+#    #+#             */
-/*   Updated: 2026/08/02 18:45:37 by hlaaz            ###   ########.fr       */
+/*   Updated: 2026/08/04 20:19:16 by hlaaz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,12 @@ static int	init_coders(t_simulation *sim)
 		sim->coders[i].left = &sim->dongles[i];
 		sim->coders[i].right = &sim->dongles[(i + 1)
 			% sim->config.nb_coders];
+		if (i % 2 == 1)
+		{
+			sim->coders[i].left = &sim->dongles[(i + 1)
+				% sim->config.nb_coders];
+			sim->coders[i].right = &sim->dongles[i];
+		}
 		sim->coders[i].sim = sim;
 		if (pthread_cond_init(&sim->coders[i].cond, NULL) != 0)
 		{
