@@ -4,13 +4,16 @@ CC = cc
 CFLAGS = -Wall -Wextra -Werror -pthread
 
 SRC = main.c \
-		parser.c \
-		threads.c \
-		monitor.c \
-		scheduler.c \
-		logger.c \
-		utils.c \
-		cleanup.c
+		 parser.c \
+		 init.c \
+		 cleanup.c \
+		 threads.c \
+		 monitor.c \
+		 dongle.c \
+		 routine.c \
+		 utils.c \
+		 logger.c \
+		 scheduler.c
 
 OBJ = $(SRC:.c=.o)
 

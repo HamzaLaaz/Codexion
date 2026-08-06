@@ -6,11 +6,18 @@
 /*   By: hlaaz <hlaaz@student.1337.ma>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/27 16:33:22 by hlaaz             #+#    #+#             */
-/*   Updated: 2026/08/04 20:19:16 by hlaaz            ###   ########.fr       */
+/*   Updated: 2026/08/06 19:35:51 by hlaaz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
+
+static int	destroy_cond(t_simulation *sim, int i)
+{
+	while (--i >= 0)
+		pthread_cond_destroy(&sim->coders[i].cond);
+	return (error("Failed to initialize coder condition variable"));
+}
 
 static int	init_coders(t_simulation *sim)
 {
@@ -20,13 +27,11 @@ static int	init_coders(t_simulation *sim)
 	while (i < sim->config.nb_coders)
 	{
 		sim->coders[i].id = i + 1;
-		sim->coders[i].thread = (pthread_t)0;
 		sim->coders[i].last_compile_start = sim->start_time;
 		sim->coders[i].compiles_done = 0;
 		sim->coders[i].left = &sim->dongles[i];
-		sim->coders[i].right = &sim->dongles[(i + 1)
-			% sim->config.nb_coders];
-		if (i % 2 == 1)
+		sim->coders[i].right = &sim->dongles[(i + 1) % sim->config.nb_coders];
+		if (i == (sim->config.nb_coders - 1))
 		{
 			sim->coders[i].left = &sim->dongles[(i + 1)
 				% sim->config.nb_coders];
@@ -34,11 +39,7 @@ static int	init_coders(t_simulation *sim)
 		}
 		sim->coders[i].sim = sim;
 		if (pthread_cond_init(&sim->coders[i].cond, NULL) != 0)
-		{
-			while (--i >= 0)
-				pthread_cond_destroy(&sim->coders[i].cond);
-			return (error("Failed to initialize coder condition variable"));
-		}
+			return (destroy_cond(sim, i));
 		i++;
 	}
 	return (0);
@@ -52,11 +53,13 @@ static int	init_dongles(t_simulation *sim)
 	while (i < sim->config.nb_coders)
 	{
 		if (pthread_mutex_init(&sim->dongles[i].mutex, NULL) != 0)
-			return (error("Failed to initialize dongle mutex"));
+			return (cleanup_simulation(sim, i, 0),
+				error("Failed to initialize dongle mutex"));
 		if (pthread_cond_init(&sim->dongles[i].cond, NULL) != 0)
 		{
 			pthread_mutex_destroy(&sim->dongles[i].mutex);
-			return (error("Failed to initialize dongle condition variable"));
+			return (cleanup_simulation(sim, i, 0),
+				error("Failed to initialize dongle condition variable"));
 		}
 		sim->dongles[i].available = 1;
 		sim->dongles[i].available_at = sim->start_time;
@@ -97,10 +100,7 @@ int	init_simulation(t_simulation *sim, t_config *config)
 	if (alloc_memory(sim))
 		return (destroy_mutex(sim), 1);
 	if (init_dongles(sim))
-	{
-		cleanup_simulation(sim, sim->config.nb_coders, 0);
 		return (1);
-	}
 	if (init_coders(sim))
 	{
 		cleanup_simulation(sim, sim->config.nb_coders,

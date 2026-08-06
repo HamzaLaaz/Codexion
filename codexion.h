@@ -6,7 +6,7 @@
 /*   By: hlaaz <hlaaz@student.1337.ma>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/25 17:19:28 by hlaaz             #+#    #+#             */
-/*   Updated: 2026/08/02 18:40:08 by hlaaz            ###   ########.fr       */
+/*   Updated: 2026/08/06 15:56:09 by hlaaz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,6 @@
 typedef struct s_simulation	t_simulation;
 typedef struct s_coder		t_coder;
 typedef struct s_dongle		t_dongle;
-
-
 
 typedef struct s_request
 {
@@ -110,23 +108,23 @@ void	join_threads(t_simulation *sim);
 /*monitor.c*/
 void	*monitor(void *arg);
 
-
 /*dongle.c*/
 void	release_dongle(t_dongle *dongle, t_simulation *sim);
 
 /* scheduler.c */
-long		get_priority(t_coder *coder);
-void		queue_push(t_queue *q, t_coder *coder, long priority);
-void		queue_pop(t_queue *q);
-t_coder		*queue_front(t_queue *q);
+long	get_priority(t_coder *coder);
+void	queue_push(t_queue *q, t_coder *coder, long priority);
+void	queue_pop(t_queue *q);
+t_coder	*queue_front(t_queue *q);
 
 /*logger.c*/
-void	log_action(t_coder *coder, char *msg);
+int		log_action(t_coder *coder, char *msg);
 
 /*utils.c*/
 long	current_time_ms(void);
 void	msleep(t_simulation *sim, long time);
 int		simulation_running(t_simulation *sim);
-int	coder_done(t_coder *coder);
+int		coder_done(t_coder *coder);
+void	sleep_odd_coders(t_coder *coder);
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: hlaaz <hlaaz@student.1337.ma>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/30 00:49:17 by hlaaz             #+#    #+#             */
-/*   Updated: 2026/08/02 15:30:25 by hlaaz            ###   ########.fr       */
+/*   Updated: 2026/08/06 12:40:31 by hlaaz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,16 +26,6 @@ static void	wake_all_coders(t_simulation *sim)
 	}
 }
 
-// static int	is_running(t_simulation *sim)
-// {
-// 	int	running;
-
-// 	pthread_mutex_lock(&sim->state_mutex);
-// 	running = sim->running;
-// 	pthread_mutex_unlock(&sim->state_mutex);
-// 	return (running);
-// }
-
 static int	check_burnout(t_simulation *sim)
 {
 	long	time;
@@ -46,11 +36,14 @@ static int	check_burnout(t_simulation *sim)
 	{
 		pthread_mutex_lock(&sim->state_mutex);
 		time = current_time_ms() - sim->coders[i].last_compile_start;
-		if (time >= sim->config.time_to_burnout)
+		if (time > sim->config.time_to_burnout)
 		{
 			sim->running = 0;
 			pthread_mutex_unlock(&sim->state_mutex);
-			log_action(&sim->coders[i], "burned out");
+			time = current_time_ms() - sim->coders[i].sim->start_time;
+			pthread_mutex_lock(&sim->coders[i].sim->log_mutex);
+			printf("%ld %d burned out\n", time, i + 1);
+			pthread_mutex_unlock(&sim->coders[i].sim->log_mutex);
 			wake_all_coders(sim);
 			return (1);
 		}
@@ -94,11 +87,11 @@ void	*monitor(void *arg)
 	sim = (t_simulation *)arg;
 	while (simulation_running(sim))
 	{
+		usleep(500);
 		if (check_burnout(sim))
 			return (NULL);
 		if (check_compiles(sim))
 			return (NULL);
-		usleep(500);
 	}
 	return (NULL);
 }

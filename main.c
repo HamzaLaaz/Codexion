@@ -1,29 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   logger.c                                           :+:      :+:    :+:   */
+/*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: hlaaz <hlaaz@student.1337.ma>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/07/30 00:49:12 by hlaaz             #+#    #+#             */
-/*   Updated: 2026/08/03 10:01:11 by hlaaz            ###   ########.fr       */
+/*   Created: 2026/07/22 08:06:20 by hlaaz             #+#    #+#             */
+/*   Updated: 2026/08/04 20:15:21 by hlaaz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-int	log_action(t_coder *coder, char *msg)
+int	main(int argc, char **argv)
 {
-	long	time;
+	t_config		config;
+	t_simulation	sim;
 
-	pthread_mutex_lock(&coder->sim->log_mutex);
-	if (!simulation_running(coder->sim))
+	if (parse_arguments(argc, argv, &config))
+		return (1);
+	if (init_simulation(&sim, &config))
+		return (1);
+	if (create_threads(&sim))
 	{
-		pthread_mutex_unlock(&coder->sim->log_mutex);
-		return (0);
+		cleanup_simulation(&sim, sim.config.nb_coders, sim.config.nb_coders);
+		return (1);
 	}
-	time = current_time_ms() - coder->sim->start_time;
-	printf("%ld %d %s\n", time, coder->id, msg);
-	pthread_mutex_unlock(&coder->sim->log_mutex);
-	return (1);
+	join_threads(&sim);
+	cleanup_simulation(&sim, sim.config.nb_coders, sim.config.nb_coders);
+	return (0);
 }

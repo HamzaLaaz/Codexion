@@ -6,7 +6,7 @@
 /*   By: hlaaz <hlaaz@student.1337.ma>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/30 19:38:54 by hlaaz             #+#    #+#             */
-/*   Updated: 2026/08/02 18:49:58 by hlaaz            ###   ########.fr       */
+/*   Updated: 2026/08/06 12:40:21 by hlaaz            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,24 +14,22 @@
 
 static int	wait_for_dongle(t_coder *coder, t_dongle *dongle)
 {
-	long			priority;
 	struct timespec	ts;
 
 	pthread_mutex_lock(&dongle->mutex);
-	priority = get_priority(coder);
-	queue_push(&dongle->waiters, coder, priority);
-	while (!dongle->available
-		|| current_time_ms() < dongle->available_at
+	while (!dongle->available || current_time_ms() < dongle->available_at
 		|| queue_front(&dongle->waiters) != coder)
 	{
 		if (!simulation_running(coder->sim))
-		{
-			pthread_mutex_unlock(&dongle->mutex);
-			return (1);
-		}
+			return (pthread_mutex_unlock(&dongle->mutex), 1);
 		ts.tv_sec = dongle->available_at / 1000;
 		ts.tv_nsec = (dongle->available_at % 1000) * 1000000;
-		pthread_cond_timedwait(&dongle->cond, &dongle->mutex, &ts);
+		if (!dongle->available || queue_front(&dongle->waiters) != coder)
+			pthread_cond_wait(&dongle->cond, &dongle->mutex);
+		if (!simulation_running(coder->sim))
+			return (pthread_mutex_unlock(&dongle->mutex), 1);
+		if (current_time_ms() < dongle->available_at)
+			pthread_cond_timedwait(&dongle->cond, &dongle->mutex, &ts);
 	}
 	queue_pop(&dongle->waiters);
 	dongle->available = 0;
@@ -41,28 +39,27 @@ static int	wait_for_dongle(t_coder *coder, t_dongle *dongle)
 
 static int	take_dongles(t_coder *coder)
 {
-	t_dongle	*first;
-	t_dongle	*second;
+	long			priority;
 
-	if (coder->id == coder->sim->config.nb_coders)
-	{
-		first = coder->right;
-		second = coder->left;
-	}
-	else
-	{
-		first = coder->left;
-		second = coder->right;
-	}
-	if (wait_for_dongle(coder, first))
+	priority = get_priority(coder);
+	pthread_mutex_lock(&coder->left->mutex);
+	queue_push(&coder->left->waiters, coder, priority);
+	pthread_mutex_unlock(&coder->left->mutex);
+	priority = get_priority(coder);
+	pthread_mutex_lock(&coder->right->mutex);
+	queue_push(&coder->right->waiters, coder, priority);
+	pthread_mutex_unlock(&coder->right->mutex);
+	if (wait_for_dongle(coder, coder->left))
 		return (1);
-	log_action(coder, "has taken a dongle");
-	if (wait_for_dongle(coder, second))
+	if (!log_action(coder, "has taken a dongle"))
+		return (1);
+	if (wait_for_dongle(coder, coder->right))
 	{
-		release_dongle(first, coder->sim);
+		release_dongle(coder->left, coder->sim);
 		return (1);
 	}
-	log_action(coder, "has taken a dongle");
+	if (!log_action(coder, "has taken a dongle"))
+		return (1);
 	return (0);
 }
 
@@ -89,8 +86,8 @@ void	*coder_routine(void *arg)
 	t_coder	*coder;
 
 	coder = (t_coder *)arg;
-	while (simulation_running(coder->sim)
-		&& !coder_done(coder))
+	sleep_odd_coders(coder);
+	while (simulation_running(coder->sim) && !coder_done(coder))
 	{
 		if (take_dongles(coder))
 			break ;
